@@ -1,0 +1,44 @@
+html,
+body {
+    background-color: whitesmoke;
+    font-family: 'robotoregular', Arial, sans-serif;
+}
+
+button {
+    padding: 0.25rem;
+}
+
+.input-label {
+    display: block;
+    margin-top: 0.5rem;
+    margin-bottom: 0.125rem;
+}
+
+.title {
+    font-size: 1.25rem;
+    text-align: center;
+}
+
+.clear-fs{
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.radio-container{
+    padding: 0.25rem 0rem;
+}
+
+input[type=text],
+input[type=number] {
+    box-sizing: border-box;
+    width: 100%;
+    font-size: 0.8rem;
+    padding: 0.125rem 0.25rem;
+}
+
+
+.err-text {
+    font-size: 0.8rem;
+    color: crimson;
+}

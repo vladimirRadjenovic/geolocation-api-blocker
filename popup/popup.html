@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popup settings</title>
+    <link rel="stylesheet" href="../css/normalize.css">
+    <link rel="stylesheet" href="../leaflet/leaflet.css">
+    <link rel="stylesheet" href="../fonts/font-rule.css">
+    <link rel="stylesheet" href="../css/stylesheet.css">
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <h1 class="title">Geolocation API Blocker</h1>
+    <p id="curr-setting"></p>
+    <hr>
+
+    <form id="settings-form">
+        <fieldset id="fs-upper">
+            <legend>Select mode</legend>
+            <div class="radio-container">
+                <input type="radio" id="off" name="mode" value="off">
+                <label for="off">Off</label>
+            </div>
+            <div class="radio-container">
+                <input type="radio" id="random" name="mode" value="random">
+                <label for="random">Random</label>
+            </div>
+            <div class="radio-container">
+                <input type="radio" id="fixed" name="mode" value="fixed">
+                <label for="fixed">Fixed</label>
+            </div>
+        </fieldset>
+
+        <fieldset class="clear-fs" id="fs-middle" hidden disabled>
+            <div>
+                <label class="input-label" for="radius">Radius [km]</label>
+                <input class="inv" type="number" name="radius" id="radius" required step="0.001" min="0" max="1000">
+            </div>
+            <div>
+                <label class="input-label" for="cache-time">Cache duration [s]</label>
+                <input class="inv" type="number" name="cache-time" id="cache-time" required step="1" min="1" max="86400">
+            </div>
+        </fieldset>
+
+        <fieldset class="clear-fs" id="fs-lower" hidden disabled>
+            <div>
+                <label class="input-label" for="latitude">Latitude</label>
+                <input class="inv" type="number" required name="latitude" id="latitude" step="0.0000001" min="-90" max="90">
+            </div>
+            <div>
+                <label class="input-label" for="longitude">Longitude</label>
+                <input class="inv" type="number" required name="longitude" id="longitude" step="0.0000001" min="-180" max="180">
+            </div>
+            <!-- Leaflet map -->
+            <div id="map"></div>
+        </fieldset>
+
+        <p class="err-text" id="err-display" hidden></p>
+        <div id="btn-grid">
+            <button id="btn-options" type="button">More options</button>
+            <button id="btn-submit" type="submit">Save current</button>
+        </div>
+    </form>
+
+    <script type="module" src="popup.mjs"></script>
+</body>
+
+</html>
