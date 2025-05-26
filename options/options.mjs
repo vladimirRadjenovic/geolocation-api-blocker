@@ -120,19 +120,14 @@ async function saveChanges(event) {
         setting
     });
 
-
     if (res.op === "success") {
         dialog.close();
         if (formTitle.textContent === "New rule") {
-            await renderTable(); //rerender table of successful addition
+            await renderTable(); //rerender table on successful addition
         }
     } else {
-        errDisp.hidden = false;
-        errDisp.textContent = `A problem occured: ${res.msg}`;
-        setTimeout(() => {
-            errDisp.hidden = true;
-            errDisp.textContent = null;
-        }, 2500);
+        errDisp.textContent = "A problem occurred while saving.";
+        setTimeout(() => errDisp.textContent = null, 2500);
     }
 }
 

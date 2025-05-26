@@ -1,8 +1,11 @@
 (() => {
+    if (!window.isSecureContext) {
+        return;
+    }
 
     function handleConnectEvent(event) {
         if (event.origin === window.origin
-            && event.data.type === "geolocation-api-blocker-connect"
+            && event.data.type === 0x474142
             && event.ports[0] instanceof MessagePort) {
 
             removeEventListener(event.type, handleConnectEvent);
@@ -21,12 +24,9 @@
                     });
                 }
             });
-
-            //must be invoked when using addEventListener
-            port.start();
             
-            port.postMessage("ACK");
-
+            port.start(); //must be invoked when using addEventListener
+            port.postMessage(0x41434B);
         }
     }
 

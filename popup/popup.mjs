@@ -14,7 +14,7 @@ const lngInput = document.getElementById("longitude");
 const radiusInput = document.getElementById("radius");
 const cacheTimeInput = document.getElementById("cache-time");
 
-const errDisp = document.getElementById("error-display");
+const errDisp = document.getElementById("err-display");
 
 let currHostname;
 
@@ -35,8 +35,11 @@ async function init() {
         active: true,
         lastFocusedWindow: true
     };
+
     const [tab] = await chrome.tabs.query(queryOptions);
-    currHostname = new URL(tab.url).hostname;
+    if (URL.canParse(tab.url)) {
+        currHostname = new URL(tab.url).hostname;
+    }
 
     const { hostname, setting } = await chrome.runtime.sendMessage({
         type: "get-setting",
@@ -83,9 +86,23 @@ async function init() {
 
 }
 
+function showErr(msg) {
+    errDisp.hidden = false;
+    errDisp.textContent = msg;
+    setTimeout(() => {
+        errDisp.hidden = true;
+        errDisp.textContent = null;
+    }, 2500);
+}
+
 //save button function
 async function saveSettings(event) {
     event.preventDefault();
+
+    if (!currHostname) {
+        showErr("Invalid hostname");
+        return;
+    }
 
     let setting = {
         mode: "off"
@@ -112,12 +129,8 @@ async function saveSettings(event) {
     if (res.op === "success") {
         window.close();
     } else {
-        errDisp.hidden = false;
-        errDisp.textContent = `A problem occured: ${res.msg}`;
-        setTimeout(() => {
-            errDisp.hidden = true;
-            errDisp.textContent = null;
-        }, 2500);
+        //don't leak res.msg to the user
+        showErr("A problem occurred while saving.");
     }
 }
 
