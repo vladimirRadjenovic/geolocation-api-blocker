@@ -8,6 +8,9 @@
     Couldn't find any documentation whether this is true, but it makes sense accuracy wise.
     */
     const DECIMALS = 7;
+    const TYPE_ADD_EL = -1;
+    const TYPE_ONMESSAGE = 0;
+    const TYPE_REMOVE_EL = 1;
 
     const channel = new MessageChannel();
 
@@ -69,25 +72,28 @@
     toStringMap.set(Function.prototype.toString, _toString);
 
     /*
-    There is a problem with timing. A malicious content script can register an event handler
+    There is a problem with timing. A malicious content script can register an onmessage/message event handler
     and get a hold of MessageChannel's port2. We need to delay this until we get a signal from isolated script.
     */
     let enabled = false;
     let messageHandlerQueue = [];
+
+    function validateArgs(args) {
+        return args[0] === "message" && args.length > 1 && (
+            args[1] === null ||
+            args[1] === undefined ||
+            typeof args[1] === "function" ||
+            typeof args[1] === "object"
+        );
+    }
+
     const _addEventListener = EventTarget.prototype.addEventListener;
+
     EventTarget.prototype.addEventListener = new Proxy(_addEventListener, {
         apply(target, thisArg, args) {
-            if (!enabled && args[0] === "message" &&
-                (args.length > 1 &&
-                    (args[1] === null ||
-                        args[1] === undefined ||
-                        typeof args[1] === "function" ||
-                        typeof args[1] === "object"
-                    )
-                )
-            ) {
+            if (!enabled && validateArgs(args)) {
                 messageHandlerQueue.push({
-                    isAEL: true,
+                    type: TYPE_ADD_EL,
                     args
                 });
                 return undefined;
@@ -98,18 +104,25 @@
 
     toStringMap.set(EventTarget.prototype.addEventListener, _addEventListener);
 
-    let delayedMessagesArgs = [];
-    const _postMessage = window.postMessage;
-    window.postMessage = new Proxy(_postMessage, {
+
+    const _removeEventListener = EventTarget.prototype.removeEventListener;
+
+    EventTarget.prototype.removeEventListener = new Proxy(_removeEventListener, {
         apply(target, thisArg, args) {
-            if (!enabled) {
-                delayedMessagesArgs.push(args);
+            if (!enabled && validateArgs(args)) {
+                messageHandlerQueue.push({
+                    type: TYPE_REMOVE_EL,
+                    args
+                });
                 return undefined;
             }
             return trapErrAndModifyTrace(() => Reflect.apply(target, thisArg, args));
+
         }
     })
-    toStringMap.set(window.postMessage, _postMessage);
+
+    toStringMap.set(EventTarget.prototype.removeEventListener, _removeEventListener);
+
 
     const _onMessageDesc = Object.getOwnPropertyDescriptor(window, "onmessage");
     const _onMessageGet = _onMessageDesc.get;
@@ -128,18 +141,22 @@
         }
     });
 
-    toStringMap.set(onMessageGetProxy, _onMessageGet);
-
-    let onMessageSetProxy = new Proxy(_onMessageSet, {
+    const onMessageSetProxy = new Proxy(_onMessageSet, {
         apply(target, thisArg, args) {
             if (enabled) {
                 return Reflect.apply(target, thisArg, args);
             } else if (index === null && typeof args[0] === "function") {
                 index = messageHandlerQueue.length;
-                messageHandlerQueue.push({ args });
+                messageHandlerQueue.push({
+                    type: TYPE_ONMESSAGE,
+                    args
+                });
             } else {
                 if (typeof args[0] === "function") {
-                    messageHandlerQueue[index] = { args };
+                    messageHandlerQueue[index] = {
+                        type: TYPE_ONMESSAGE,
+                        args
+                    };
                 } else {
                     messageHandlerQueue.splice(index, 1);
                     index = null;
@@ -148,8 +165,6 @@
         }
     });
 
-    toStringMap.set(onMessageSetProxy, _onMessageSet);
-
     Object.defineProperty(window, "onmessage", {
         configurable: _onMessageDesc.configurable,
         enumerable: _onMessageDesc.enumerable,
@@ -157,16 +172,42 @@
         set: onMessageSetProxy
     });
 
+    toStringMap.set(onMessageGetProxy, _onMessageGet);
+    toStringMap.set(onMessageSetProxy, _onMessageSet);
+
+
+    let delayedMessagesArgs = [];
+    const _postMessage = window.postMessage;
+
+    window.postMessage = new Proxy(_postMessage, {
+        apply(target, thisArg, args) {
+            if (!enabled) {
+                delayedMessagesArgs.push(args);
+                return undefined;
+            }
+            return trapErrAndModifyTrace(() => Reflect.apply(target, thisArg, args));
+        }
+    })
+
+    toStringMap.set(window.postMessage, _postMessage);
+
+
     _addEventListener.call(channel.port1, "message", message => {
         if (message.data === 0x41434B) {
             //switch proxied functions to default behavior
             enabled = true;
 
             for (const entry of messageHandlerQueue) {
-                if (entry.isAEL) {
-                    _addEventListener.apply(window, entry.args)
-                } else {
-                    _onMessageSet.apply(window, entry.args);
+                switch (entry.type) {
+                    case TYPE_ADD_EL:
+                        _addEventListener.apply(window, entry.args);
+                        break;
+                    case TYPE_ONMESSAGE:
+                        _onMessageSet.apply(window, entry.args);
+                        break;
+                    case TYPE_REMOVE_EL:
+                        _removeEventListener.apply(window, entry.args);
+                        break;
                 }
             }
 
@@ -186,7 +227,7 @@
 
     //used in case of user turning off the extension
     let contextInvalidated = false;
-    let prototypeAltered = false;
+    let prototypeSetup = false;
     let _latGet;
     let _lngGet;
     //GeolocationCoords, latng
@@ -244,7 +285,6 @@
             get: lngGetProxy
         });
 
-
         /*
         TO CONSIDER: The overhead of proxied getters is pretty big.
         Sometimes, it takes more than 2x to execute a modified getter.
@@ -266,9 +306,9 @@
                 type: "get-setting",
             });
 
-            if (!prototypeAltered) {
+            if (!prototypeSetup) {
                 setupGCProto(position);
-                prototypeAltered = true;
+                prototypeSetup = true;
             }
 
             switch (setting.mode) {

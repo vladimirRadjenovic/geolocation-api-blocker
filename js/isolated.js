@@ -24,8 +24,9 @@
                     });
                 }
             });
-            
-            port.start(); //must be invoked when using addEventListener
+
+            //must be invoked when using addEventListener
+            port.start(); 
             port.postMessage(0x41434B);
         }
     }
