@@ -1,6 +1,6 @@
 # Geolocation API Blocker
 
-[Geolocation API Blocker](https://chromewebstore.google.com/detail/geolocation-api-blocker/cbpmbkimnhdlaibdcngplgmchiibjeni) is a minimalist Chrome extension that allows the user to control the behavior of the [Geolocation API]().
+[Geolocation API Blocker](https://chromewebstore.google.com/detail/geolocation-api-blocker/cbpmbkimnhdlaibdcngplgmchiibjeni) is a minimalist Chrome extension that allows the user to control the behavior of the [Geolocation API](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API).
 
 The extension applies its settings on a per-hostname basis. There are three settings available:
 
