@@ -236,6 +236,7 @@
 
     //Called only once
     function setupGCProto(position) {
+        const positionProto = Object.getPrototypeOf(position);
         const coordsProto = Object.getPrototypeOf(position.coords);
 
         const _latProp = Object.getOwnPropertyDescriptor(coordsProto, "latitude");
@@ -243,6 +244,13 @@
 
         _latGet = _latProp.get;
         _lngGet = _lngProp.get;
+
+        /*
+        TO CONSIDER: The overhead of proxied getters is pretty big.
+        Sometimes, it takes more than 2x to execute a modified getter.
+        Maybe we could just wrap proxies around all properties
+        in order to make the access times more uniform.
+        */
 
         const latGetProxy = new Proxy(_latGet, {
             apply(target, thisArg, args) {
@@ -285,12 +293,39 @@
             get: lngGetProxy
         });
 
+
         /*
-        TO CONSIDER: The overhead of proxied getters is pretty big.
-        Sometimes, it takes more than 2x to execute a modified getter.
-        Maybe we could just wrap proxies around all properties
-        in order to make the access times more uniform.
+        We need to alter toJSON since proxying getters seem
+        to get bypassed when toJSON is called thus revealing our location.
+        GeolocationPosition toJSON does not call GeolocationCoordinates toJSON.
+        We need to Proxy both.
         */
+        const _geolocationCoordinatesToJSON = coordsProto.toJSON;
+
+        coordsProto.toJSON = new Proxy(_geolocationCoordinatesToJSON, {
+            apply(target, thisArg, args) {
+                const result = trapErrAndModifyTrace(() => Reflect.apply(target, thisArg, args));
+                result.latitude = thisArg.latitude;
+                result.longitude = thisArg.longitude;
+                return result;
+            }
+        });
+
+        toStringMap.set(coordsProto.toJSON, _geolocationCoordinatesToJSON);
+
+
+        const _geolocationPositionToJSON = positionProto.toJSON;
+
+        positionProto.toJSON = new Proxy(_geolocationPositionToJSON, {
+            apply(target, thisArg, args) {
+                const result = trapErrAndModifyTrace(() => Reflect.apply(target, thisArg, args));
+                result.coords.latitude = thisArg.coords.latitude;
+                result.coords.longitude = thisArg.coords.longitude;
+                return result;
+            }
+        });
+
+        toStringMap.set(positionProto.toJSON, _geolocationPositionToJSON);
 
     }
 
