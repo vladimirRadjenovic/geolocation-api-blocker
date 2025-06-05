@@ -321,7 +321,7 @@
             apply(target, thisArg, args) {
                 const result = trapErrAndModifyTrace(() => Reflect.apply(target, thisArg, args));
                 result.coords.latitude = _latGet.apply(thisArg.coords);
-                result.coords.longitude = _latGet.apply(thisArg.coords);
+                result.coords.longitude = _lngGet.apply(thisArg.coords);
                 return result;
             }
         });
