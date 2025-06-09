@@ -324,8 +324,8 @@
                 const result = trapErrAndModifyTrace(() => Reflect.apply(target, thisArg, args));
                 const latlng = coordsMap.get(thisArg.coords);
                 if (latlng) {
-                    result.latitude = parseFloat(latlng.latitude.toFixed(DECIMALS));
-                    result.longitude = parseFloat(latlng.longitude.toFixed(DECIMALS));
+                    result.coords.latitude = parseFloat(latlng.latitude.toFixed(DECIMALS));
+                    result.coords.longitude = parseFloat(latlng.longitude.toFixed(DECIMALS));
                 }
                 return result;
             }
