@@ -305,9 +305,11 @@
         coordsProto.toJSON = new Proxy(_geolocationCoordinatesToJSON, {
             apply(target, thisArg, args) {
                 const result = trapErrAndModifyTrace(() => Reflect.apply(target, thisArg, args));
-                //_latGet.apply(thisArg) instead of thisArg.latitude to remove Proxy overhead
-                result.latitude = _latGet.apply(thisArg);
-                result.longitude = _lngGet.apply(thisArg);
+                const latlng = coordsMap.get(thisArg);
+                if (latlng) {
+                    result.latitude = parseFloat(latlng.latitude.toFixed(DECIMALS));
+                    result.longitude = parseFloat(latlng.longitude.toFixed(DECIMALS));
+                }
                 return result;
             }
         });
@@ -320,8 +322,11 @@
         positionProto.toJSON = new Proxy(_geolocationPositionToJSON, {
             apply(target, thisArg, args) {
                 const result = trapErrAndModifyTrace(() => Reflect.apply(target, thisArg, args));
-                result.coords.latitude = _latGet.apply(thisArg.coords);
-                result.coords.longitude = _lngGet.apply(thisArg.coords);
+                const latlng = coordsMap.get(thisArg.coords);
+                if (latlng) {
+                    result.latitude = parseFloat(latlng.latitude.toFixed(DECIMALS));
+                    result.longitude = parseFloat(latlng.longitude.toFixed(DECIMALS));
+                }
                 return result;
             }
         });
