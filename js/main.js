@@ -257,7 +257,7 @@
                 if (thisArg instanceof GeolocationCoordinates) {
                     const latlng = coordsMap.get(thisArg);
                     if (latlng) {
-                        return parseFloat(latlng.latitude.toFixed(DECIMALS));
+                        return latlng.latitude;
                     }
                 }
                 return trapErrAndModifyTrace(() => Reflect.apply(target, thisArg, args));
@@ -278,7 +278,7 @@
                 if (thisArg instanceof GeolocationCoordinates) {
                     const latlng = coordsMap.get(thisArg);
                     if (latlng) {
-                        return parseFloat(latlng.longitude.toFixed(DECIMALS));
+                        return latlng.longitude;
                     }
                 }
                 return trapErrAndModifyTrace(() => Reflect.apply(target, thisArg, args));
@@ -307,8 +307,8 @@
                 const result = trapErrAndModifyTrace(() => Reflect.apply(target, thisArg, args));
                 const latlng = coordsMap.get(thisArg);
                 if (latlng) {
-                    result.latitude = parseFloat(latlng.latitude.toFixed(DECIMALS));
-                    result.longitude = parseFloat(latlng.longitude.toFixed(DECIMALS));
+                    result.latitude = latlng.latitude;
+                    result.longitude = latlng.longitude;
                 }
                 return result;
             }
@@ -324,8 +324,8 @@
                 const result = trapErrAndModifyTrace(() => Reflect.apply(target, thisArg, args));
                 const latlng = coordsMap.get(thisArg.coords);
                 if (latlng) {
-                    result.coords.latitude = parseFloat(latlng.latitude.toFixed(DECIMALS));
-                    result.coords.longitude = parseFloat(latlng.longitude.toFixed(DECIMALS));
+                    result.coords.latitude = latlng.latitude;
+                    result.coords.longitude = latlng.longitude;
                 }
                 return result;
             }
@@ -368,8 +368,8 @@
                     });
 
                     coordsMap.set(position.coords, {
-                        latitude: latlng.latitude,
-                        longitude: latlng.longitude
+                        latitude: parseFloat(latlng.latitude.toFixed(DECIMALS)),
+                        longitude: parseFloat(latlng.longitude.toFixed(DECIMALS))
                     });
                     break;
                 default:
