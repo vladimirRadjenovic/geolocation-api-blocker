@@ -26,7 +26,7 @@
             });
 
             //must be invoked when using addEventListener
-            port.start(); 
+            port.start();
             port.postMessage(0x41434B);
         }
     }

@@ -227,7 +227,7 @@
 
     //used in case of user turning off the extension
     let contextInvalidated = false;
-    let prototypeSetup = false;
+    let shimSetup = false;
     let _latGet;
     let _lngGet;
     //GeolocationCoords, latng
@@ -235,7 +235,7 @@
 
 
     //Called only once
-    function setupGCProto(position) {
+    function setupShim(position) {
         const positionProto = Object.getPrototypeOf(position);
         const coordsProto = Object.getPrototypeOf(position.coords);
 
@@ -347,9 +347,9 @@
                 type: "get-setting",
             });
 
-            if (!prototypeSetup) {
-                setupGCProto(position);
-                prototypeSetup = true;
+            if (!shimSetup) {
+                setupShim(position);
+                shimSetup = true;
             }
 
             switch (setting.mode) {

@@ -45,11 +45,10 @@
                 <h1 id="form-title"></h1>
                 <fieldset class="clear-fs" id="fs-hostname">
                     <div>
-                        <label for="hostname">Hostname:</label>
+                        <label class="input-label" for="hostname">Hostname</label>
                         <!-- NOTE: A pattern for regex validation could be added here, but there is much discussion on SO 
                         regarding different RFCs and whatnot. I don't want to deal with that.-->
-                        <input class="inv" type="text" id="hostname" name="hostname" minlength="1" maxlength="255"
-                            required>
+                        <input type="text" id="hostname" name="hostname" minlength="1" maxlength="255" required>
                     </div>
                 </fieldset>
 
@@ -88,7 +87,8 @@
                     </div>
                     <div id="lng-container">
                         <label class="input-label" for="longitude">Longitude</label>
-                        <input type="number" name="longitude" required id="longitude" min="-180" max="180" step="0.0000001">
+                        <input type="number" name="longitude" required id="longitude" min="-180" max="180"
+                            step="0.0000001">
                     </div>
                 </fieldset>
 

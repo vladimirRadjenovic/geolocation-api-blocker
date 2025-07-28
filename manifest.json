@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Geolocation API Blocker",
-    "version": "0.7.7",
+    "version": "0.7.8",
     "description": "A simple extension for overriding the browser's Geolocation API.",
     "minimum_chrome_version": "111",
     "icons": {
