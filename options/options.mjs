@@ -21,6 +21,7 @@ const lngInput = document.getElementById("longitude");
 const radiusInput = document.getElementById("radius");
 const cacheTimeInput = document.getElementById("cache-time");
 
+const hostnameMap = new Map();
 
 function setupDialog(hostname = undefined, setting = undefined) {
     //clear old values for random
@@ -151,60 +152,66 @@ async function renderTable(filter = _ => { return true; }) {
     }
 
     for (const entry of obj) {
-
         //Don't render if the entry is not valid
         if (!filter(entry)) {
             continue;
         }
-
-        const tr = document.createElement("tr");
-        const hostnameTd = document.createElement("td");
-        hostnameTd.textContent = entry;
-        const editTd = document.createElement("td");
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "Edit";
-        editBtn.type = "button";
-        editBtn.style.width = "100%";
-        editTd.appendChild(editBtn);
-
-
-        editBtn.addEventListener("click", async () => {
-            const { hostname, setting } = await chrome.runtime.sendMessage({
-                type: "get-setting",
-                hostname: entry
-            });
-            setupDialog(hostname, setting); //populates dialog fields
-            dialog.showModal();
-            //Leaflet needs to recalculate the map size after modal opens
-            //SRC: https://stackoverflow.com/questions/42400662/loading-map-in-leaflet-is-very-slow
-            locationPicker.invalidateSize(false);
-
-        });
-
-        const delTd = document.createElement("td");
-        if (entry !== "default_setting") {
-            const delBtn = document.createElement("button");
-            delBtn.textContent = "Delete";
-            delBtn.type = "button";
-            delBtn.style.width = "100%";
-
-            delBtn.addEventListener("click", async () => {
-                const res = await chrome.runtime.sendMessage({
-                    type: "delete-setting",
-                    hostname: entry
-                });
-                if (res.op === "success") {
-                    tr.remove(); //remove table row on successful delete
-                }
-            });
-            delTd.appendChild(delBtn);
-        }
-
-        tr.append(hostnameTd, editTd, delTd);
-        tableBody.appendChild(tr);
-
+        renderTableRow(entry);
     }
 }
+
+
+function renderTableRow(entry) {
+    const tr = document.createElement("tr");
+    const hostnameTd = document.createElement("td");
+    hostnameTd.textContent = entry;
+    const editTd = document.createElement("td");
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Edit";
+    editBtn.type = "button";
+    editBtn.style.width = "100%";
+    editTd.appendChild(editBtn);
+
+
+    editBtn.addEventListener("click", async () => {
+        const { hostname, setting } = await chrome.runtime.sendMessage({
+            type: "get-setting",
+            hostname: entry
+        });
+        setupDialog(hostname, setting); //populates dialog fields
+        dialog.showModal();
+        //Leaflet needs to recalculate the map size after modal opens
+        //SRC: https://stackoverflow.com/questions/42400662/loading-map-in-leaflet-is-very-slow
+        locationPicker.invalidateSize(false);
+
+    });
+
+    const delTd = document.createElement("td");
+    if (entry !== "default_setting") {
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "Delete";
+        delBtn.type = "button";
+        delBtn.style.width = "100%";
+
+        delBtn.addEventListener("click", async () => {
+            const res = await chrome.runtime.sendMessage({
+                type: "delete-setting",
+                hostname: entry
+            });
+            if (res.op === "success") {
+                hostnameMap.delete(entry);
+                tr.remove(); //remove table row on successful delete
+            }
+        });
+        delTd.appendChild(delBtn);
+    }
+
+    hostnameMap.set(entry, tr);
+
+    tr.append(hostnameTd, editTd, delTd);
+    tableBody.appendChild(tr);
+}
+
 
 tableControlsForm.addEventListener("submit", async event => {
     event.preventDefault();
@@ -225,6 +232,23 @@ async function init() {
     });
 
     await renderTable();
+
+    console.log(chrome.runtime);
+    chrome.runtime.onMessage.addListener(async (message, _, _sendResponse) => {
+        if (message.type === "rule-added") {
+            const present = hostnameMap.has(message.hostname);
+            if (!present) {
+                renderTableRow(message.hostname);
+            }
+        } else if (message.type === "rule-deleted") {
+            const tr = hostnameMap.get(message.hostname);
+            if (tr) {
+                hostnameMap.delete(message.hostname);
+                tr.remove();
+            }
+        }
+
+    });
 
 }
 
