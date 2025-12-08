@@ -10,4 +10,4 @@ The extension applies its settings on a per-hostname basis. There are three sett
 
 * _Off_ - Original coordinates remain unaltered.
 
-If a site uses your IP to detect your location, this extension cannot do anything about it. Its only purpose is to alter the behavior of Geolocation API, which is a much more accurate method of obtaining location.
+If a site uses your IP to detect your location, this extension cannot do anything about it. Its only purpose is to alter the behavior of the Geolocation API, which is a much more accurate method of obtaining location.
