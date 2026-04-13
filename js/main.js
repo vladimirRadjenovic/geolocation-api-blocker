@@ -221,8 +221,8 @@
 
         }
     }, { once: true });
-    channel.port1.start();
 
+    channel.port1.start();
 
 
     //used in case of user turning off the extension
@@ -336,9 +336,16 @@
     }
 
 
+    let lastPosition;
+
     async function _map(position) {
-        //user has turned off their extension
-        if (contextInvalidated) {
+        /*
+        The user might have turned of their extension.
+        OR    
+        If the Geolocation API caller specifies the maxAge option, a cached value might be used.
+        It's important that a cached object doesn't get updated.
+        */
+        if (contextInvalidated || position === lastPosition) {
             return position;
         }
 
@@ -351,6 +358,8 @@
                 setupShim(position);
                 shimSetup = true;
             }
+
+            lastPosition = position;
 
             switch (setting.mode) {
                 case "fixed":
@@ -373,10 +382,7 @@
                     });
                     break;
                 default:
-                /*
-                There is no need to do anything here. If the value is original,
-                getter functions will return it if they don't find an entry in the weak map.
-                */
+                //Case "off" is ignored since the real value is there anyway
             }
 
         } catch (err) {
