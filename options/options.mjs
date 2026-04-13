@@ -233,7 +233,6 @@ async function init() {
 
     await renderTable();
 
-    console.log(chrome.runtime);
     chrome.runtime.onMessage.addListener(async (message, _, _sendResponse) => {
         if (message.type === "rule-added") {
             const present = hostnameMap.has(message.hostname);
