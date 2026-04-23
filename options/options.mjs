@@ -233,18 +233,24 @@ async function init() {
 
     await renderTable();
 
-    chrome.runtime.onMessage.addListener(async (message, _, _sendResponse) => {
-        if (message.type === "rule-added") {
-            const present = hostnameMap.has(message.hostname);
-            if (!present) {
-                renderTableRow(message.hostname);
-            }
-        } else if (message.type === "rule-deleted") {
-            const tr = hostnameMap.get(message.hostname);
-            if (tr) {
-                hostnameMap.delete(message.hostname);
-                tr.remove();
-            }
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName !== "session") {
+            return;
+        }
+        //No need to check for existence since the extension doesn't use session storage for anything else.
+        const { hostname, type } = changes.ruleChange.newValue;
+        switch (type) {
+            case "rule-added":
+                if (!hostnameMap.has(hostname)) {
+                    renderTableRow(hostname);
+                }
+                break;
+            case "rule-deleted":
+                const tr = hostnameMap.get(hostname);
+                if (tr) {
+                    hostnameMap.delete(hostname);
+                    tr.remove();
+                }
         }
 
     });

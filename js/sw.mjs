@@ -138,10 +138,14 @@ function _handleDeleteSetting(message, _, sendResponse) {
         const wasPresent = map.delete(message.hostname);
         //no need to serialize map if the item targeted for deletion was not present
         if (wasPresent) {
-            chrome.runtime.sendMessage({
-                type: "rule-deleted",
-                hostname: message.hostname
+
+            chrome.storage.session.set({
+                ruleChange: {
+                    type: "rule-deleted",
+                    hostname: message.hostname
+                }
             });
+
             return chrome.storage.local.set({
                 map: [...map]
             });
@@ -166,11 +170,15 @@ function _handleApplySetting(message, _, sendResponse) {
     mapInit.then(() => {
         const present = map.has(message.hostname);
         if (!present) {
-            chrome.runtime.sendMessage({
-                type: "rule-added",
-                hostname: message.hostname
+
+            chrome.storage.session.set({
+                ruleChange: {
+                    type: "rule-added",
+                    hostname: message.hostname
+                }
             });
         }
+        
         map.set(message.hostname, message.setting);
         return chrome.storage.local.set({
             map: [...map]
